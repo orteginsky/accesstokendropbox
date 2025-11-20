@@ -1,0 +1,56 @@
+$PROJECT_ID = "ortega-473114"
+$REGION     = "us-central1"
+$SERVICE    = "accesstokendropbox"
+$REPO       = "ai"   # Artifact Registry repo
+$TAG        = (Get-Date -Format "yyyyMMdd-HHmmss")  # tag único por build
+
+# Imagen en Artifact Registry
+$IMAGE      = "us-central1-docker.pkg.dev/$PROJECT_ID/$REPO/${SERVICE}:$TAG"
+
+Write-Host "🔧 Proyecto: $PROJECT_ID"
+Write-Host "🌎 Región:   $REGION"
+Write-Host "🧩 Servicio: $SERVICE"
+Write-Host "📦 Imagen:   $IMAGE"
+
+# ==========================
+# 1) Build + Push
+# ==========================
+Write-Host "`n🚀 Construyendo y subiendo imagen..."
+gcloud config set project $PROJECT_ID | Out-Null
+
+gcloud builds submit --tag $IMAGE
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Error en gcloud builds submit. Abortando."
+    exit 1
+}
+
+# ==========================
+# 2) Deploy a Cloud Run
+# ==========================
+Write-Host "`n📡 Deployando servicio en Cloud Run..."
+
+gcloud run deploy $SERVICE `
+  --image $IMAGE `
+  --region $REGION `
+  --platform managed `
+  --service-account "secret-manager-sa@$PROJECT_ID.iam.gserviceaccount.com" `
+  --allow-unauthenticated `
+  --memory 512Mi `
+  --cpu 1 `
+  --timeout 60 `
+  --max-instances 10 `
+  --set-env-vars `
+    "APP_NAME=AccessTokenDropbox,DEBUG=False,LOG_LEVEL=INFO,AUTH_MODE=simple,GCP_PROJECT_ID=$PROJECT_ID,SECRET_NAME=dropbox-access-token" `
+  --set-secrets `
+    "API_SECRET_KEY=api-secret-key:latest,DROPBOX_APP_KEY=dropbox-app-key:latest,DROPBOX_APP_SECRET=dropbox-app-secret:latest"
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Error en gcloud run deploy."
+    exit 1
+}
+
+Write-Host "`n✅ Deploy completado."
+Write-Host "   Servicio: $SERVICE"
+Write-Host "   Región:   $REGION"
+Write-Host "Revisa la URL pública en la salida de gcloud run deploy."
