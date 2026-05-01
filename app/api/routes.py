@@ -87,6 +87,7 @@ async def get_token(
 async def initialize_token(
     authorization_code: str,
     signature: str,
+    redirect_uri: Optional[str] = None,
     auth_service: AuthService = Depends(get_auth_service),
     token_service: TokenService = Depends(get_token_service)
 ) -> TokenResponse:
@@ -96,6 +97,7 @@ async def initialize_token(
     Args:
         authorization_code: OAuth authorization code from Dropbox
         signature: Authentication signature
+        redirect_uri: Optional redirect URI used in the authorize call
         auth_service: Authentication service (injected)
         token_service: Token service (injected)
 
@@ -111,7 +113,7 @@ async def initialize_token(
             )
 
         # Initialize token
-        token_response = token_service.initialize_token(authorization_code)
+        token_response = token_service.initialize_token(authorization_code, redirect_uri)
 
         logger.info("Token initialized successfully")
         return token_response

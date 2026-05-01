@@ -114,12 +114,13 @@ class TokenService:
             refreshed=True
         )
 
-    def initialize_token(self, authorization_code: str) -> TokenResponse:
+    def initialize_token(self, authorization_code: str, redirect_uri: Optional[str] = None) -> TokenResponse:
         """
         Initialize token for first-time setup using authorization code.
 
         Args:
             authorization_code: OAuth authorization code
+            redirect_uri: Optional redirect URI if different from default
 
         Returns:
             TokenResponse with new token
@@ -130,7 +131,7 @@ class TokenService:
         logger.info("Initializing new token with authorization code")
 
         # Get initial token from Dropbox
-        new_token = self.dropbox_repo.get_initial_token(authorization_code)
+        new_token = self.dropbox_repo.get_initial_token(authorization_code, redirect_uri)
 
         if not new_token:
             error_msg = "Failed to get initial token from Dropbox"

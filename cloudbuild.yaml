@@ -5,21 +5,21 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/accesstokendropbox:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:$BUILD_ID'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/accesstokendropbox:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:latest'
       - '.'
 
-  # Push the container image to Container Registry
+  # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/accesstokendropbox:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:$BUILD_ID'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/accesstokendropbox:latest'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:latest'
 
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -29,18 +29,18 @@ steps:
       - 'deploy'
       - 'accesstokendropbox'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/accesstokendropbox:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:$BUILD_ID'
       - '--region'
-      - 'us-central1'  # Change to your preferred region
+      - 'us-central1'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated'  # Change if you want authentication
+      - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'GCP_PROJECT_ID=$PROJECT_ID,SECRET_NAME=dropbox-access-token'
+      - 'APP_NAME=AccessTokenDropbox,DEBUG=False,LOG_LEVEL=INFO,AUTH_MODE=simple,GCP_PROJECT_ID=$PROJECT_ID,SECRET_NAME=dropbox-access-token'
       - '--set-secrets'
       - 'API_SECRET_KEY=api-secret-key:latest,DROPBOX_APP_KEY=dropbox-app-key:latest,DROPBOX_APP_SECRET=dropbox-app-secret:latest'
       - '--service-account'
-      - 'accesstokendropbox-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - 'secret-manager-sa@ortega-473114.iam.gserviceaccount.com'
       - '--memory'
       - '512Mi'
       - '--cpu'
@@ -53,8 +53,8 @@ steps:
       - '0'
 
 images:
-  - 'gcr.io/$PROJECT_ID/accesstokendropbox:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/accesstokendropbox:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/ai/accesstokendropbox:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY

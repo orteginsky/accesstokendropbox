@@ -109,17 +109,19 @@ class DropboxRepository:
             logger.error(f"Unexpected error refreshing token: {e}")
             return None
 
-    def get_initial_token(self, authorization_code: str) -> Optional[DropboxToken]:
+    def get_initial_token(self, authorization_code: str, redirect_uri: Optional[str] = None) -> Optional[DropboxToken]:
         """
         Get initial access token using authorization code.
         This is used for first-time setup.
         """
         try:
+            uri = redirect_uri or settings.DROPBOX_REDIRECT_URI
+            logger.info(f"Using redirect_uri for token exchange: {uri}")
+            
             data = {
                 "grant_type": "authorization_code",
                 "code": authorization_code,
-                # 👇 MUY IMPORTANTE: debe coincidir con el usado en la URL de autorización
-                "redirect_uri": settings.DROPBOX_REDIRECT_URI,
+                "redirect_uri": uri,
             }
 
             # Autenticación recomendada por Dropbox: Basic Auth con app_key/app_secret
